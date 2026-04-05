@@ -1,0 +1,14 @@
+{
+  "name": "ohm-gym-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp AI Assistant for The Ohm Gym",
+  "type": "module",
+  "scripts": {
+    "start": "node api/webhook.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.101.1",
+    "dotenv": "^17.4.0"
+  }
+}
