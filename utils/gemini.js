@@ -5,8 +5,8 @@ dotenv.config();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function getGymAssistantResponse(userMessage, contextText = "") {
-  // Using Flash model as it's the fastest and cheapest for chat interactions
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  // using the latest stable model
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
   
   const systemInstruction = `
 You are the AI assistant for 'The Ohm Gym'.
