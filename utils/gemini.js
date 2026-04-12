@@ -17,17 +17,36 @@ ${contextText}
     );
   }
 
-  const apiBase = (
-    process.env.NVIDIA_API_BASE || "https://integrate.api.nvidia.com/v1"
-  ).replace(/\/$/, "");
+  const rawBase = (
+    process.env.NVIDIA_API_BASE || "https://integrate.api.nvidia.com"
+  )
+    .trim()
+    .replace(/\/$/, "");
   const model = process.env.NVIDIA_MODEL || "gemma-4-31b-it";
-  const url = `${apiBase}/chat/completions`;
+
+  // Allow NVIDIA_API_BASE to be either:
+  // - https://integrate.api.nvidia.com
+  // - https://integrate.api.nvidia.com/v1
+  // - https://integrate.api.nvidia.com/v1/chat/completions
+  let url;
+  if (
+    rawBase.endsWith("/chat/completions") ||
+    rawBase.endsWith("/completions")
+  ) {
+    url = rawBase;
+  } else {
+    const baseWithVersion = /\/v1($|\/)/.test(rawBase)
+      ? rawBase
+      : `${rawBase}/v1`;
+    url = `${baseWithVersion.replace(/\/$/, "")}/chat/completions`;
+  }
 
   const response = await fetch(url, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
     body: JSON.stringify({
       model,
