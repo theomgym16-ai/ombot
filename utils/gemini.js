@@ -22,7 +22,7 @@ ${contextText}
   )
     .trim()
     .replace(/\/$/, "");
-  const model = process.env.NVIDIA_MODEL || "gemma-4-31b-it";
+  const model = process.env.NVIDIA_MODEL || "google/gemma-4-31b-it";
 
   // Allow NVIDIA_API_BASE to be either:
   // - https://integrate.api.nvidia.com
@@ -61,8 +61,12 @@ ${contextText}
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => "");
+    const modelHint =
+      response.status === 404
+        ? " (Often means NVIDIA_MODEL is wrong or not enabled for this API key; check https://integrate.api.nvidia.com/v1/models)"
+        : "";
     throw new Error(
-      `NVIDIA LLM request failed: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ""}`,
+      `NVIDIA LLM request failed: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ""}${modelHint}`,
     );
   }
 

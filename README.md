@@ -71,6 +71,8 @@ NVIDIA LLM:
 
 - `NVIDIA_API_KEY`
 - `NVIDIA_API_BASE` (default: `https://integrate.api.nvidia.com/v1`)
-- `NVIDIA_MODEL` (example: `gemma-4-31b-it`)
+- `NVIDIA_MODEL` (example: `google/gemma-4-31b-it`)
+
+Tip: Model IDs are namespaced. If you get a 404 from the LLM call, verify your key can see the model by calling `GET https://integrate.api.nvidia.com/v1/models` and pick a model from that list (e.g. `google/gemma-2-2b-it`).
 
 **Repository**: `https://github.com/theomgym16-ai/ombot`
