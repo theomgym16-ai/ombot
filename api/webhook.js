@@ -25,9 +25,6 @@ export default async function handler(req, res) {
 
     // Validate that the request came from Meta
     if (body.object === "whatsapp_business_account") {
-      // Ack immediately so Meta doesn't retry; continue work after responding.
-      res.status(200).send("EVENT_RECEIVED");
-
       try {
         for (const entry of body.entry) {
           for (const change of entry.changes) {
@@ -133,7 +130,9 @@ export default async function handler(req, res) {
         console.error("Webhook processing error:", error);
       }
 
-      return;
+      // Ack Meta ONLY AFTER processing completes or fails gracefully
+      // On Vercel, responding early can freeze process execution and swallow subsequent network requests/logs.
+      return res.status(200).send("EVENT_RECEIVED");
     }
 
     return res.status(404).send("Not Found");
