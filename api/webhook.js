@@ -1,30 +1,30 @@
-import { sendWhatsAppMessage } from '../utils/whatsapp.js';
-import { getGymAssistantResponse } from '../utils/gemini.js';
-import { supabase } from '../utils/supabase.js';
+import { sendWhatsAppMessage } from "../utils/whatsapp.js";
+import { getGymAssistantResponse } from "../utils/gemini.js";
+import { supabase } from "../utils/supabase.js";
 
 export default async function handler(req, res) {
   // ==========================================
   // 1. WEBHOOK VERIFICATION (By Meta)
   // ==========================================
-  if (req.method === 'GET') {
-    const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
+  if (req.method === "GET") {
+    const mode = req.query["hub.mode"];
+    const token = req.query["hub.verify_token"];
+    const challenge = req.query["hub.challenge"];
 
-    if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
+    if (mode === "subscribe" && token === process.env.WHATSAPP_VERIFY_TOKEN) {
       return res.status(200).send(challenge);
     }
-    return res.status(403).send('Forbidden');
+    return res.status(403).send("Forbidden");
   }
 
   // ==========================================
   // 2. PROCESS INCOMING MESSAGES
   // ==========================================
-  if (req.method === 'POST') {
+  if (req.method === "POST") {
     const body = req.body;
-    
+
     // Validate that the request came from Meta
-    if (body.object === 'whatsapp_business_account') {
+    if (body.object === "whatsapp_business_account") {
       try {
         for (const entry of body.entry) {
           for (const change of entry.changes) {
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
             // Ensure this is a message event and not a status change (like "read")
             if (value && value.messages && value.messages[0]) {
               const message = value.messages[0];
-              const senderPhone = message.from; 
+              const senderPhone = message.from;
               const messageText = message.text?.body;
               const waMessageId = message.id;
 
@@ -40,94 +40,96 @@ export default async function handler(req, res) {
 
               // Step A: Deduplication (Meta aggressively retries webhooks if no 200 OK is sent immediately)
               const { data: existingLog } = await supabase
-                .from('message_logs')
-                .select('id')
-                .eq('wa_message_id', waMessageId)
+                .from("message_logs")
+                .select("id")
+                .eq("wa_message_id", waMessageId)
                 .single();
-              
+
               if (existingLog) continue; // Already processed this message
 
               // Step B: Identify User in Database
               let { data: user } = await supabase
-                .from('users')
-                .select('id, name')
-                .eq('phone_number', senderPhone)
+                .from("users")
+                .select("id, name")
+                .eq("phone_number", senderPhone)
                 .single();
-                
+
               if (!user) {
                 // If member isn't in DB yet, create a barebones profile
                 const { data: newUser, error: createError } = await supabase
-                  .from('users')
-                  .insert({ phone_number: senderPhone, name: 'Guest' })
+                  .from("users")
+                  .insert({ phone_number: senderPhone, name: "Guest" })
                   .select()
                   .single();
-                
+
                 if (createError) throw createError;
                 user = newUser;
               }
 
               // Step C: Active Conversation Management for AI Context
               let { data: conversation } = await supabase
-                 .from('conversations')
-                 .select('id')
-                 .eq('user_id', user.id)
-                 .eq('status', 'active')
-                 .order('last_activity_at', { ascending: false })
-                 .limit(1)
-                 .single();
-                 
+                .from("conversations")
+                .select("id")
+                .eq("user_id", user.id)
+                .eq("status", "active")
+                .order("last_activity_at", { ascending: false })
+                .limit(1)
+                .single();
+
               if (!conversation) {
-                 const { data: newConv } = await supabase
-                   .from('conversations')
-                   .insert({ user_id: user.id })
-                   .select()
-                   .single();
-                 conversation = newConv;
+                const { data: newConv } = await supabase
+                  .from("conversations")
+                  .insert({ user_id: user.id })
+                  .select()
+                  .single();
+                conversation = newConv;
               } else {
-                 await supabase
-                   .from('conversations')
-                   .update({ last_activity_at: new Date().toISOString() })
-                   .eq('id', conversation.id);
+                await supabase
+                  .from("conversations")
+                  .update({ last_activity_at: new Date().toISOString() })
+                  .eq("id", conversation.id);
               }
 
-              // Step D: Request Gemini Output
-              const context = `Member Name: ${user.name || 'Friend'}. Let them know their profile is recognized.`;
-              const aiResponse = await getGymAssistantResponse(messageText, context);
+              // Step D: Request LLM Output
+              const context = `Member Name: ${user.name || "Friend"}. Let them know their profile is recognized.`;
+              const aiResponse = await getGymAssistantResponse(
+                messageText,
+                context,
+              );
 
               // Step E: Send WhatsApp Message Back
               await sendWhatsAppMessage(senderPhone, aiResponse);
 
               // Step F: Log Transcription (both sides)
-              await supabase.from('message_logs').insert([
-                { 
-                  conversation_id: conversation.id, 
-                  user_id: user.id, 
-                  direction: 'inbound', 
-                  content: messageText, 
-                  wa_message_id: waMessageId 
+              await supabase.from("message_logs").insert([
+                {
+                  conversation_id: conversation.id,
+                  user_id: user.id,
+                  direction: "inbound",
+                  content: messageText,
+                  wa_message_id: waMessageId,
                 },
-                { 
-                  conversation_id: conversation.id, 
-                  user_id: user.id, 
-                  direction: 'outbound', 
-                  content: aiResponse 
-                }
+                {
+                  conversation_id: conversation.id,
+                  user_id: user.id,
+                  direction: "outbound",
+                  content: aiResponse,
+                },
               ]);
             }
           }
         }
-        
+
         // Acknowledge receipt to Meta immediately so they don't retry
-        return res.status(200).send('EVENT_RECEIVED');
-        
+        return res.status(200).send("EVENT_RECEIVED");
       } catch (error) {
-        console.error('Webhook processing error:', error);
-        return res.status(200).send('ERROR_PROCESSING');
+        console.error("Webhook processing error:", error);
+        return res.status(200).send("ERROR_PROCESSING");
       }
     }
-    
-    return res.status(404).send('Not Found');
+
+    return res.status(404).send("Not Found");
   }
 
-  return res.status(405).send('Method Not Allowed');
+  return res.status(405).send("Method Not Allowed");
 }
