@@ -10,6 +10,12 @@ Here is some context about the user or gym:
 ${contextText}
 `;
 
+  // NVIDIA Integrate may reject `role: "system"` for some models.
+  // We embed the instruction into the user prompt to keep compatibility.
+  const combinedUserPrompt = `${systemInstruction.trim()}
+
+User: ${userMessage}`;
+
   const apiKey = process.env.NVIDIA_API_KEY;
   if (!apiKey) {
     throw new Error(
@@ -23,6 +29,7 @@ ${contextText}
     .trim()
     .replace(/\/$/, "");
   const model = process.env.NVIDIA_MODEL || "google/gemma-4-31b-it";
+  const timeoutMs = Number(process.env.NVIDIA_TIMEOUT_MS || 12000);
 
   // Allow NVIDIA_API_BASE to be either:
   // - https://integrate.api.nvidia.com
@@ -41,23 +48,37 @@ ${contextText}
     url = `${baseWithVersion.replace(/\/$/, "")}/chat/completions`;
   }
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemInstruction.trim() },
-        { role: "user", content: userMessage },
-      ],
-      temperature: 0.6,
-      max_tokens: 512,
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  let response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: combinedUserPrompt }],
+        temperature: 0.6,
+        max_tokens: 512,
+        stream: false,
+      }),
+      signal: controller.signal,
+    });
+  } catch (e) {
+    if (e && e.name === "AbortError") {
+      throw new Error(
+        `NVIDIA LLM request timed out after ${timeoutMs}ms | url=${url} | model=${model}`,
+      );
+    }
+    throw e;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => "");

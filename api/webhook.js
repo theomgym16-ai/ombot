@@ -25,6 +25,9 @@ export default async function handler(req, res) {
 
     // Validate that the request came from Meta
     if (body.object === "whatsapp_business_account") {
+      // Ack immediately so Meta doesn't retry; continue work after responding.
+      res.status(200).send("EVENT_RECEIVED");
+
       try {
         for (const entry of body.entry) {
           for (const change of entry.changes) {
@@ -126,13 +129,11 @@ export default async function handler(req, res) {
             }
           }
         }
-
-        // Acknowledge receipt to Meta immediately so they don't retry
-        return res.status(200).send("EVENT_RECEIVED");
       } catch (error) {
         console.error("Webhook processing error:", error);
-        return res.status(200).send("ERROR_PROCESSING");
       }
+
+      return;
     }
 
     return res.status(404).send("Not Found");
