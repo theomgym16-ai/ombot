@@ -66,7 +66,7 @@ ${contextText}
         ? " (Often means NVIDIA_MODEL is wrong or not enabled for this API key; check https://integrate.api.nvidia.com/v1/models)"
         : "";
     throw new Error(
-      `NVIDIA LLM request failed: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ""}${modelHint}`,
+      `NVIDIA LLM request failed: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ""}${modelHint} | url=${url} | model=${model}`,
     );
   }
 

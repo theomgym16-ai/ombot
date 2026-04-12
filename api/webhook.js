@@ -92,10 +92,17 @@ export default async function handler(req, res) {
 
               // Step D: Request LLM Output
               const context = `Member Name: ${user.name || "Friend"}. Let them know their profile is recognized.`;
-              const aiResponse = await getGymAssistantResponse(
-                messageText,
-                context,
-              );
+              let aiResponse;
+              try {
+                aiResponse = await getGymAssistantResponse(
+                  messageText,
+                  context,
+                );
+              } catch (llmError) {
+                console.error("LLM error:", llmError);
+                aiResponse =
+                  "Sorry — I'm having trouble generating a reply right now. Please try again in a minute.";
+              }
 
               // Step E: Send WhatsApp Message Back
               await sendWhatsAppMessage(senderPhone, aiResponse);
