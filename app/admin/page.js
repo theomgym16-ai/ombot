@@ -35,37 +35,47 @@ export default async function AdminDashboardPage() {
   const members = await getMembers();
 
   return (
-    <main style={{ maxWidth: 960, margin: "40px auto", fontFamily: "sans-serif" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <main className="admin-shell">
+      <div className="admin-header">
         <h1>Members</h1>
         <LogoutButton />
       </div>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ textAlign: "left", borderBottom: "2px solid #ccc" }}>
-            <th style={{ padding: 8 }}>Name</th>
-            <th style={{ padding: 8 }}>Phone</th>
-            <th style={{ padding: 8 }}>Status</th>
-            <th style={{ padding: 8 }}>Plan</th>
-            <th style={{ padding: 8 }}>Expires</th>
-          </tr>
-        </thead>
-        <tbody>
-          {members.map((member) => (
-            <tr key={member.id} style={{ borderBottom: "1px solid #eee" }}>
-              <td style={{ padding: 8 }}>{member.name || "—"}</td>
-              <td style={{ padding: 8 }}>{member.phone_number}</td>
-              <td style={{ padding: 8 }}>{member.status}</td>
-              <td style={{ padding: 8 }}>{member.subscription?.plans?.name || "—"}</td>
-              <td style={{ padding: 8 }}>
-                {member.subscription?.end_date
-                  ? new Date(member.subscription.end_date).toLocaleDateString()
-                  : "—"}
-              </td>
+      <div className="admin-table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Status</th>
+              <th>Plan</th>
+              <th>Expires</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {members.map((member) => (
+              <tr key={member.id}>
+                <td>{member.name || "—"}</td>
+                <td>{member.phone_number}</td>
+                <td>
+                  <span
+                    className={`badge ${
+                      member.status === "active" ? "badge-active" : "badge-inactive"
+                    }`}
+                  >
+                    {member.status}
+                  </span>
+                </td>
+                <td>{member.subscription?.plans?.name || "—"}</td>
+                <td>
+                  {member.subscription?.end_date
+                    ? new Date(member.subscription.end_date).toLocaleDateString()
+                    : "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </main>
   );
 }

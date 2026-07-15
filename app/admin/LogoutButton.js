@@ -12,7 +12,7 @@ export default function LogoutButton() {
   }
 
   return (
-    <button onClick={handleLogout} style={{ padding: "6px 12px" }}>
+    <button onClick={handleLogout} className="btn-secondary">
       Log out
     </button>
   );

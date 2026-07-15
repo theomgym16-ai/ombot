@@ -7,6 +7,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -38,42 +39,52 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main style={{ maxWidth: 360, margin: "80px auto", fontFamily: "sans-serif" }}>
-      <h1>The Ohm Gym — Admin</h1>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: 12 }}>
-          <label htmlFor="username">Username</label>
-          <br />
-          <input
-            id="username"
-            name="username"
-            type="text"
-            autoComplete="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            style={{ width: "100%", padding: 8 }}
-          />
-        </div>
-        <div style={{ marginBottom: 12 }}>
-          <label htmlFor="password">Password</label>
-          <br />
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: "100%", padding: 8 }}
-          />
-        </div>
-        {error && <p style={{ color: "crimson" }}>{error}</p>}
-        <button type="submit" disabled={submitting} style={{ padding: "8px 16px" }}>
-          {submitting ? "Signing in..." : "Sign in"}
-        </button>
-      </form>
-    </main>
+    <div className="admin-login-shell">
+      <div className="admin-login-card">
+        <h1 className="admin-login-title">The Ohm Gym — Admin</h1>
+        <form onSubmit={handleSubmit}>
+          <div className="field">
+            <label htmlFor="username">Username</label>
+            <div className="field-input-row">
+              <input
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          <div className="field">
+            <label htmlFor="password">Password</label>
+            <div className="field-input-row">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="field-toggle"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+          {error && <p className="form-error">{error}</p>}
+          <button type="submit" className="btn-primary" disabled={submitting}>
+            {submitting ? "Signing in..." : "Sign in"}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
