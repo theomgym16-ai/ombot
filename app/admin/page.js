@@ -1,7 +1,19 @@
 import { supabase } from "../../utils/supabase.js";
 import LogoutButton from "./LogoutButton.js";
+import OnboardMemberForm from "./OnboardMemberForm.js";
 
 export const dynamic = "force-dynamic";
+
+async function getPlans() {
+  const { data, error } = await supabase
+    .from("plans")
+    .select("id, name, price")
+    .eq("is_active", true)
+    .order("price", { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
 
 async function getMembers() {
   const { data: users, error: usersError } = await supabase
@@ -32,7 +44,7 @@ async function getMembers() {
 }
 
 export default async function AdminDashboardPage() {
-  const members = await getMembers();
+  const [members, plans] = await Promise.all([getMembers(), getPlans()]);
 
   return (
     <main className="admin-shell">
@@ -40,6 +52,7 @@ export default async function AdminDashboardPage() {
         <h1>Members</h1>
         <LogoutButton />
       </div>
+      <OnboardMemberForm plans={plans} />
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
