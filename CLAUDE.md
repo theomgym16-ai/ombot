@@ -1,4 +1,4 @@
-# CLAUDE.md
+# CLAUDE.md check
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -25,10 +25,12 @@ Everything lives under `app/` (Next.js App Router). Two independent surfaces sha
 ### WhatsApp webhook
 
 [app/api/webhook/route.js](app/api/webhook/route.js) handles both:
+
 - **GET**: Meta's webhook verification handshake (`hub.mode`/`hub.verify_token`/`hub.challenge`).
 - **POST**: incoming WhatsApp messages. Always responds `200 EVENT_RECEIVED` at the end — Meta retries aggressively on non-200, and on Vercel responding early can freeze the process and swallow the rest of the handler's async work, so processing happens fully before the ack, wrapped in try/catch.
 
 Per-message flow in the POST handler:
+
 1. **Dedup** — check `message_logs.wa_message_id` before processing (Meta redelivers webhooks).
 2. **User lookup/creation** — match `users.phone_number`; auto-create as `role: 'member'`, `name: 'Guest'` if unseen.
 3. **Conversation management** — reuse the user's most recent `status: 'active'` conversation (bump `last_activity_at`) or create a new one. This grouping exists so LLM context retrieval doesn't require slow timestamp-range queries across all messages.
@@ -46,6 +48,7 @@ Per-message flow in the POST handler:
 ### Database ([schema.sql](schema.sql))
 
 Schema is documented inline in the file with comment blocks per table — read those before modifying. Key design decisions to preserve:
+
 - `subscriptions` is **append-only**: never update/overwrite a row to represent renewal or plan change — insert a new row. This is how membership history is reconstructed.
 - `attendance_logs` (check-in only) and `workout_sessions` (what they did) are intentionally separate tables — a check-in doesn't imply a logged workout and vice versa.
 - JSONB `metadata`/`features`/`session_data`/`raw_ai_parse`/`ai_metadata` columns are the extension point for new fields — prefer adding to these over new migrations for speculative/future fields, consistent with the existing schema comments.
