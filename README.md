@@ -66,6 +66,7 @@ Built for Vercel, the app is "Serverless." It costs $0 to run in testing mode an
 - `WHATSAPP_TOKEN`
 - `WHATSAPP_PHONE_NUMBER_ID`
 - `WHATSAPP_VERIFY_TOKEN`
+- `ADMIN_SESSION_SECRET` (random string, 32+ chars, signs the admin dashboard's session cookie)
 
 NVIDIA LLM:
 
