@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-export async function sendWhatsAppMessage(to, body) {
+async function postToWhatsApp(payload) {
   const token = process.env.WHATSAPP_TOKEN;
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const timeoutMs = Number(process.env.WHATSAPP_TIMEOUT_MS || 10000);
@@ -11,12 +11,6 @@ export async function sendWhatsAppMessage(to, body) {
 
   // WhatsApp Cloud API v17 or higher
   const url = `https://graph.facebook.com/v17.0/${phoneNumberId}/messages`;
-
-  const payload = {
-    messaging_product: "whatsapp",
-    to: to,
-    text: { body: body },
-  };
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -43,4 +37,35 @@ export async function sendWhatsAppMessage(to, body) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export async function sendWhatsAppMessage(to, body) {
+  return postToWhatsApp({
+    messaging_product: "whatsapp",
+    to,
+    text: { body },
+  });
+}
+
+// rows: [{ id, title, description? }] — WhatsApp caps row titles at 24 chars
+// and descriptions at 72 chars, and 10 rows total across all sections.
+export async function sendWhatsAppList(
+  to,
+  { headerText, bodyText, footerText, buttonText, rows },
+) {
+  return postToWhatsApp({
+    messaging_product: "whatsapp",
+    to,
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: headerText ? { type: "text", text: headerText } : undefined,
+      body: { text: bodyText },
+      footer: footerText ? { text: footerText } : undefined,
+      action: {
+        button: buttonText || "Menu",
+        sections: [{ rows }],
+      },
+    },
+  });
 }

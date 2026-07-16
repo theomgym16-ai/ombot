@@ -122,12 +122,16 @@ CREATE INDEX idx_workout_muscle_grps  ON workout_sessions USING GIN (muscle_grou
 -- Without this, reconstructing context = slow timestamp range queries.
 -- trigger_type: 'morning_checkin' | 'expiry_alert' | 'user_initiated' | 'broadcast_reply'
 -- status: 'active' | 'closed' | 'pending_ai'
+-- context JSONB: tracks which structured WhatsApp menu the user is mid-flow
+--   in, e.g. { "awaiting": "main_menu" } or { "awaiting": "support_menu" }.
+--   Null/empty means the conversation is idle and falls through to the LLM.
 -- ============================================================
 CREATE TABLE conversations (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id          UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   status           TEXT NOT NULL DEFAULT 'active',
   trigger_type     TEXT NOT NULL DEFAULT 'user_initiated',
+  context          JSONB DEFAULT '{}',
   started_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   last_activity_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
