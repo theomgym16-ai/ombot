@@ -18,7 +18,16 @@ import {
 // guessing when a user asks outside the structured menu flow.
 export async function buildKnownFactsText(supabase) {
   const plansText = await buildMembershipPlansText(supabase);
-  return [plansText, GYM_TIMINGS_TEXT, LOCATION_TEXT, CONTACT_STAFF_TEXT].join("\n\n");
+  return [
+    plansText,
+    GYM_TIMINGS_TEXT,
+    LOCATION_TEXT,
+    CONTACT_STAFF_TEXT,
+    JOIN_NOW_TEXT,
+    FREE_TRIAL_TEXT,
+    PERSONAL_TRAINING_TEXT,
+    DIET_PLANS_TEXT,
+  ].join("\n\n");
 }
 
 function durationLabel(days) {
