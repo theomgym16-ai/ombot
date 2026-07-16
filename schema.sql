@@ -187,6 +187,28 @@ CREATE TABLE broadcast_jobs (
 
 
 -- ============================================================
+-- REMINDERS_SENT
+-- Idempotency ledger for the proactive expiry-reminder cron
+-- (app/api/cron/expiry-check). One row per (subscription, reminder_type)
+-- that has been delivered. The UNIQUE constraint is the real double-send
+-- guard — it survives cron retries and overlapping runs, so the send loop
+-- can rely on an insert failing rather than a read-then-write race.
+-- Kept separate from `subscriptions` so that table stays append-only and
+-- is never mutated to record a side-channel like "reminder sent".
+-- reminder_type: 'expiry_3d' | 'expiry_1d' | 'expired'
+-- ============================================================
+CREATE TABLE reminders_sent (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+  reminder_type   TEXT NOT NULL CHECK (reminder_type IN ('expiry_3d', 'expiry_1d', 'expired')),
+  sent_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (subscription_id, reminder_type)
+);
+
+CREATE INDEX idx_reminders_subscription ON reminders_sent (subscription_id);
+
+
+-- ============================================================
 -- ADMINS
 -- Dashboard login accounts — never created via a public API route.
 -- Provisioned only through scripts/create-admin.mjs.

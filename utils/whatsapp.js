@@ -47,6 +47,35 @@ export async function sendWhatsAppMessage(to, body) {
   });
 }
 
+// Sends a pre-approved Message Template — the ONLY way to reach a user
+// outside the 24-hour customer-service window (i.e. proactive reminders).
+// Plain text (sendWhatsAppMessage) is rejected by Meta in that case.
+// bodyParams: ordered strings mapped to the template's {{1}}, {{2}}, ... vars.
+export async function sendWhatsAppTemplate(
+  to,
+  templateName,
+  bodyParams = [],
+  languageCode = "en",
+) {
+  return postToWhatsApp({
+    messaging_product: "whatsapp",
+    to,
+    type: "template",
+    template: {
+      name: templateName,
+      language: { code: languageCode },
+      components: bodyParams.length
+        ? [
+            {
+              type: "body",
+              parameters: bodyParams.map((text) => ({ type: "text", text })),
+            },
+          ]
+        : undefined,
+    },
+  });
+}
+
 // rows: [{ id, title, description? }] — WhatsApp caps row titles at 24 chars
 // and descriptions at 72 chars, and 10 rows total across all sections.
 export async function sendWhatsAppList(
