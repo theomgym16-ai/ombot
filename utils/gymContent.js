@@ -1,6 +1,4 @@
 // Canned WhatsApp menu content for THE OM GYM.
-// Anything marked PLACEHOLDER below is not real gym data yet — the owner
-// needs to supply the actual value before this goes live.
 
 export const MAIN_MENU_ROWS = [
   { id: "menu_plans", title: "Membership Plans" },
@@ -28,13 +26,10 @@ export const PREMIUM_BENEFITS_TEXT = `⭐ Premium Benefits
 ✔️ Monthly Progress Check
 ✔️ Modern Equipment`;
 
-// PLACEHOLDER — replace with real opening hours.
 export const GYM_TIMINGS_TEXT = `⏰ Gym Timings
 
-Mon–Sat: 6:00 AM – 10:00 PM
-Sunday: 7:00 AM – 12:00 PM
-
-(Timings shown are a placeholder — confirm actual hours with the gym owner.)`;
+Morning: 5:00 AM – 10:00 AM
+Evening: 4:00 PM – 9:30 PM`;
 
 export const FREE_TRIAL_TEXT = `🎉 Free Trial
 
@@ -56,16 +51,13 @@ export const DIET_PLANS_TEXT = `🥗 Diet Plans
 
 All members get free diet guidance as part of their membership. Reply DIET and our trainer will share a personalized plan based on your goals.`;
 
-// PLACEHOLDER — replace with real address and maps link.
 export const LOCATION_TEXT = `📍 THE OM GYM
 
-Address: (add gym address here)
-Google Maps: (add maps link here)`;
+Google Maps: https://maps.app.goo.gl/P4k2ymhKPx7mSuev6`;
 
-// PLACEHOLDER — replace with a real staff contact number.
 export const CONTACT_STAFF_TEXT = `📞 Contact Staff
 
-Reply here anytime and our team will get back to you shortly, or call us at (add staff contact number here).`;
+Reply here anytime and our team will get back to you shortly, or call us at +91 90581 67924.`;
 
 export const EXISTING_MEMBER_SUPPORT_TEXT = `Need help?
 

@@ -13,6 +13,7 @@ import {
   resolveSupportMenuSelection,
   buildMainMenuReply,
   buildSupportMenuReply,
+  buildKnownFactsText,
 } from "../../../utils/gymMenu.js";
 
 export async function GET(request) {
@@ -161,8 +162,10 @@ export async function POST(request) {
               nextContext = { awaiting: null };
             }
           } else {
-            // Idle — no active menu flow, hand off to the free-form AI assistant.
-            const contextText = `Member Name: ${user.name || "Friend"}. Let them know their profile is recognized.`;
+            // Idle — no active menu flow, hand off to the free-form AI assistant,
+            // grounded in the same real facts the structured menu uses.
+            const knownFacts = await buildKnownFactsText(supabase);
+            const contextText = `Member Name: ${user.name || "Friend"}. Let them know their profile is recognized.\n\n${knownFacts}`;
             try {
               aiResponse = await getGymAssistantResponse(messageText, contextText);
             } catch (llmError) {

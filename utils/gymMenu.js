@@ -13,6 +13,14 @@ import {
   SUPPORT_RESPONSES,
 } from "./gymContent.js";
 
+// Grounds the free-form LLM assistant in the same real facts the menu uses,
+// so it answers plan/timing/location/contact questions correctly instead of
+// guessing when a user asks outside the structured menu flow.
+export async function buildKnownFactsText(supabase) {
+  const plansText = await buildMembershipPlansText(supabase);
+  return [plansText, GYM_TIMINGS_TEXT, LOCATION_TEXT, CONTACT_STAFF_TEXT].join("\n\n");
+}
+
 function durationLabel(days) {
   if (days === 30) return "1 Month";
   if (days === 90) return "3 Months";
